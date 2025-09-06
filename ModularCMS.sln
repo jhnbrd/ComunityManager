@@ -1,0 +1,45 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36414.22 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - Core", "1 - Core", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2 - Database", "2 - Database", "{305A2D4B-B58A-4C8E-9A2F-A03DE27336E3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3 - Modules", "3 - Modules", "{FBD5AB5E-EE29-4CB5-AB26-327405A035E6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4 - Applications", "4 - Applications", "{34788BF3-8889-4933-8CDA-21DA6F39FA21}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5 - Tests", "5 - Tests", "{8C41B317-D8E4-4E5A-9A55-7C0929021741}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModularCMS.Core", "CommunityManager.Core\ModularCMS.Core.csproj", "{341E8976-B8B0-4969-BCCC-456D64476190}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModularCMS.Shared.Contracts", "CommunityManager.Shared.Contracts\ModularCMS.Shared.Contracts.csproj", "{96B80D3D-3F3C-4319-9125-E4628C147B5C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{341E8976-B8B0-4969-BCCC-456D64476190}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{341E8976-B8B0-4969-BCCC-456D64476190}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{341E8976-B8B0-4969-BCCC-456D64476190}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{341E8976-B8B0-4969-BCCC-456D64476190}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96B80D3D-3F3C-4319-9125-E4628C147B5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96B80D3D-3F3C-4319-9125-E4628C147B5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96B80D3D-3F3C-4319-9125-E4628C147B5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96B80D3D-3F3C-4319-9125-E4628C147B5C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{341E8976-B8B0-4969-BCCC-456D64476190} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{96B80D3D-3F3C-4319-9125-E4628C147B5C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FAA3B26E-C9A1-4449-A134-235412554362}
+	EndGlobalSection
+EndGlobal
