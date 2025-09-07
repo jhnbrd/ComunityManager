@@ -1,8 +1,10 @@
 ﻿using community_management_system.Api.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Maui.ApplicationModel.Communication;
 using ModularCMS.Core.Data;
+using ModularCMS.Core.Data.Dto;
 using ModularCMS.Core.Helpers;
 using ModularCMS.Core.Models;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,6 +56,57 @@ namespace ModularCMS.Core.Services
             catch (Exception ex)
             {
                 return new LoginResult { Success = false, Message = $"Login error: {ex.Message}" };
+            }
+        }
+
+        public async Task<bool> AddEmployeeAsync(AddUserDto userDto)
+        {
+            try
+            {
+                var createdById = _sessionService.CurrentSession?.User_ID ?? 1;
+                var createdByUser = await _context.Users.FirstOrDefaultAsync(u => u.User_ID == createdById);
+
+                var (hashedPassword, salt) = PasswordHelper.HashPasswordWithSalt(userDto.Password);
+
+                var newUser = new User
+                {
+                    Username = userDto.Username,
+                    Password_Hash = hashedPassword,
+                    Password_Salt = salt,
+                    Email = userDto.Email,
+                    User_Type = "Employee",
+                    Is_Active = true,
+                    Created_At = DateTime.Now,
+                    Created_By_ID = createdById,
+                    CreatedByUser = createdByUser
+                };
+
+                await _context.Users.AddAsync(newUser);
+                await _context.SaveChangesAsync();
+
+                var newEmployee = new Employee
+                {
+                    User_ID = newUser.User_ID,
+                    First_Name = userDto.FirstName,
+                    Middle_Name = userDto.MiddleName ?? string.Empty,
+                    Last_Name = userDto.LastName,
+                    Suffix = userDto.Suffix?.ToString() ?? string.Empty,
+                    Gender = userDto.Gender.ToString(),
+                    Role = userDto.Role.ToString(),
+                    Created_At = DateTime.Now,
+                    Created_By_ID = createdById,
+                    CreatedByUser = createdByUser
+                };
+
+                await _context.Employees.AddAsync(newEmployee);
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding new employee: {ex.Message}");
+                return false;
             }
         }
 

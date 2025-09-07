@@ -1,0 +1,133 @@
+﻿@using ModularCMS.Core.Services
+@using ModularCMS.Core.Models
+@using ModularCMS.SharedUI.Shared
+@inject IMessengerService MessengerService;
+@inject NavigationManager Navigation;
+@inject SessionService SessionService;
+@implements IDisposable
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+@if (currentUserType == null)
+{
+    <Router AppAssembly="@typeof(ModularCMS.Launcher.MauiProgram).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+}
+else if (currentUserType == "Employee")
+{
+    <Router AppAssembly="@typeof(ModularCMS.EmployeeSide.Pages.Index).Assembly"
+            AdditionalAssemblies="new[] { typeof(ModularCMS.SharedUI._Imports).Assembly, typeof(ModularCMS.Core.Services.AuthService).Assembly }">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(ModularCMS.EmployeeSide.Components.Layout.EmployeeLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(ModularCMS.EmployeeSide.Components.Layout.EmployeeLayout)">
+                <div class="d-flex flex-column align-items-center justify-content-center" style="height: 580px;">
+                    <h1>Employee Portal - Page Not Found</h1>
+                    <p>The requested page could not be found in the Employee portal.</p>
+                    <button @onclick="GoToEmployeeDashboard" class="btn btn-primary">Go to Dashboard</button>
+                    <button @onclick="Logout" class="btn btn-secondary mt-2">Logout</button>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+}
+else if (currentUserType == "Resident")
+{
+    <Router AppAssembly="@typeof(ModularCMS.ResidentSide._Imports).Assembly"
+            AdditionalAssemblies="new[] { typeof(ModularCMS.SharedUI._Imports).Assembly, typeof(ModularCMS.Core.Services.AuthService).Assembly }">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(ModularCMS.SharedUI.Shared.Layout.MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(ModularCMS.SharedUI.Shared.Layout.MainLayout)">
+                <div class="d-flex flex-column align-items-center justify-content-center" style="height: 100vh;">
+                    <h1>Resident Portal - Page Not Found</h1>
+                    <p>The requested page could not be found in the Resident portal.</p>
+                    <button @onclick="GoToResidentDashboard" class="btn btn-primary">Go to Dashboard</button>
+                    <button @onclick="Logout" class="btn btn-secondary mt-2">Logout</button>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+}
+
+@code {
+    private string? currentUserType = null;
+
+    protected override void OnInitialized()
+    {
+        MessengerService.Register<LoginSuccessMessage>(HandleLoginSuccess);
+        
+        if (SessionService.IsLoggedIn)
+        {
+            currentUserType = SessionService.CurrentSession?.User_Type;
+            Console.WriteLine($"AppShell found existing session for user type: {currentUserType}");
+            
+            if (currentUserType == "Employee")
+            {
+                Navigation.NavigateTo("/employee");
+            }
+            else if (currentUserType == "Resident")
+            {
+                Navigation.NavigateTo("/resident");
+            }
+        }
+        Console.WriteLine("AppShell initialized");
+    }
+
+    private void HandleLoginSuccess(LoginSuccessMessage message)
+    {
+        Console.WriteLine($"AppShell received login success: {message.UserType}");
+
+        InvokeAsync(() =>
+        {
+            currentUserType = message.UserType;
+            StateHasChanged();
+
+            if (currentUserType == "Employee")
+            {
+                Navigation.NavigateTo("/employee", true);
+            }
+            else if (currentUserType == "Resident")
+            {
+                Navigation.NavigateTo("/resident", true);
+            }
+        });
+    }
+
+    private void Logout()
+    {
+        currentUserType = null;
+        StateHasChanged();
+    }
+
+    private void GoToEmployeeDashboard()
+    {
+        Navigation.NavigateTo("/employee", true);
+    }   
+
+    private void GoToResidentDashboard()
+    {
+        Navigation.NavigateTo("/resident", true);
+    }   
+
+    public void Dispose()
+    {
+        MessengerService.Unregister<LoginSuccessMessage>(HandleLoginSuccess);
+    }
+}

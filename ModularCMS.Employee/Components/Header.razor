@@ -1,0 +1,174 @@
+﻿@inject ISnackbar Snackbar
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject AuthService _AuthService
+
+<div class="top-header">
+    <div class="header-left">
+        <div class="status-indicators">
+            <MudChip T="string" Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Small">!</MudChip>
+            <MudChip T="string" Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small">i</MudChip>
+            <MudChip T="string" Icon="@Icons.Material.Filled.Help" Color="Color.Secondary" Size="Size.Small">?</MudChip>
+        </div>
+    </div>
+    <div class="header-right">
+        @if (_employeeInfo != null)
+        {
+            <div class="user-info">
+                <span class="user-name">@_employeeInfo.FullName</span>
+                <span class="user-role">@_employeeInfo.Role</span>
+            </div>
+            <MudAvatar Color="Color.Primary" Size="Size.Medium">@_employeeInfo.FirstInitial</MudAvatar>
+        }
+        else
+        {
+            <div class="user-info">
+                <span class="user-name">Loading...</span>
+                <span class="user-role"></span>
+            </div>
+            <MudAvatar Color="Color.Primary" Size="Size.Medium">...</MudAvatar>
+        }
+    </div>
+</div>
+
+<style>
+    .top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #E8D09D;
+        border-radius: 15px;
+        padding: 15px 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header-left {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .create-btn {
+        background: linear-gradient(135deg, #4CAF50 0%, #45A049 100%) !important;
+        color: white !important;
+        border-radius: 8px !important;
+        padding: 8px 20px !important;
+        font-weight: 600 !important;
+        text-transform: none !important;
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+    }
+
+        .create-btn:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4) !important;
+        }
+
+    .view-btn {
+        border: 2px solid #666 !important;
+        color: #666 !important;
+        border-radius: 8px !important;
+        padding: 8px 20px !important;
+        font-weight: 600 !important;
+        text-transform: none !important;
+        background: white !important;
+    }
+
+        .view-btn:hover {
+            background: #f5f5f5 !important;
+            transform: translateY(-1px) !important;
+        }
+
+    .header-center {
+        display: flex;
+        align-items: center;
+    }
+
+    .status-indicators {
+        display: flex;
+        gap: 8px;
+    }
+
+        .status-indicators .mud-chip {
+            height: 32px !important;
+            border-radius: 16px !important;
+            font-weight: bold !important;
+        }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
+    }
+
+    .user-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #2C3E50;
+        line-height: 1.2;
+    }
+
+    .user-role {
+        font-size: 12px;
+        color: #7F8C8D;
+        font-weight: 500;
+    }
+</style>
+
+@code {
+    private EmployeeInfo _employeeInfo;
+
+    private class EmployeeInfo
+    {
+        public string FullName { get; set; }
+        public string Role { get; set; }
+        public string FirstInitial { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployeeInfoAsync();
+    }
+
+    private async Task LoadEmployeeInfoAsync()
+    {
+        try
+        {
+            var session = _AuthService.GetCurrentSession();
+            if (session != null)
+            {
+                await using var dbContext = await DbContextFactory.CreateDbContextAsync();
+
+                var employee = await dbContext.Employees
+                    .FirstOrDefaultAsync(e => e.User_ID == session.User_ID);
+
+                if (employee != null)
+                {
+                    _employeeInfo = new EmployeeInfo
+                    {
+                        FullName = $"{employee.First_Name} {employee.Middle_Name} {employee.Last_Name}".Trim(),
+                        Role = employee.Role,
+                        FirstInitial = employee.First_Name?.Substring(0, 1).ToUpper() ?? "?"
+                    };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employee info: {ex.Message}");
+            Snackbar.Add("Failed to load user information.", Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+}

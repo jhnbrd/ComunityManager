@@ -22,6 +22,8 @@ namespace ModularCMS.Core.Models
         [Required]
         public required string User_Type { get; set; }
 
+        public string? Email { get; set; }
+
         [Required]
         public required bool Is_Active { get; set; }
 

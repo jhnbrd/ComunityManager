@@ -40,9 +40,6 @@ namespace community_management_system.Api.Models
         public DateTime? Updated_At { get; set; }
         public int? Updated_By_ID { get; set; }
 
-        [ForeignKey("User_ID")]
-        public required User User { get; set; }
-
         [ForeignKey("Created_By_ID")]
         public required User CreatedByUser { get; set; }
 

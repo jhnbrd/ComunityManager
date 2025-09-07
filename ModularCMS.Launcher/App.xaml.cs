@@ -14,9 +14,13 @@ namespace ModularCMS.Launcher
         {
             var window = base.CreateWindow(activationState);
 
-            window.Title = "Barangay ERP - Login";
+            window.Title = "Community Managagement System";
             window.Width = 1366;
             window.Height = 768;
+            window.MinimumWidth = 1366;
+            window.MinimumHeight = 768;
+            window.MaximumWidth = 1366;
+            window.MaximumHeight = 768;
 
             return window;
         }

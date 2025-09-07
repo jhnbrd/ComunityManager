@@ -1,7 +1,22 @@
-﻿@page "/"
+﻿@page "/employee"
+@page "/employee/dashboard"
 
-<h3>Employee Side</h3>
+<MudCard Class="mb-4">
+    <MudCardContent>
+        <MudText Typo="Typo.h6">Welcome to the Employee Portal</MudText>
+        <MudText Typo="Typo.body2">
+            This is your employee dashboard where you can manage your daily tasks and responsibilities.
+        </MudText>
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Variant="Variant.Text" Color="Color.Primary">View Tasks</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Secondary">Settings</MudButton>
+    </MudCardActions>
+</MudCard>
+@code
+{
+    protected override void OnInitialized()
+    {
 
-@code {
-
+    }
 }

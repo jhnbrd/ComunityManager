@@ -4,6 +4,7 @@ using ModularCMS.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,15 +15,15 @@ namespace ModularCMS.Core.Services
     {
         private const string SESSION_KEY = "cms_it13_session";
         private const int SESSION_DURATION_HOURS = 1;
-        private readonly IPreferencesService _preferences;
         private UserSession? _currentSession;
+        private readonly IPreferencesService _preferencesService;
 
         public UserSession? CurrentSession => _currentSession;
         public bool IsLoggedIn => _currentSession?.IsValid == true;
 
-        public SessionService(IPreferencesService preferences)
+        public SessionService(IPreferencesService preferencesService)
         {
-            _preferences = preferences;
+            _preferencesService = preferencesService;
             LoadSession();
         }
 
@@ -37,7 +38,9 @@ namespace ModularCMS.Core.Services
                 LoginTime = DateTime.Now,
                 ExpiryTime = DateTime.Now.AddHours(SESSION_DURATION_HOURS)
             };
+
             SaveSession();
+            Debug.WriteLine("Session created and saved.");
         }
 
         public void ExtendSession()
@@ -46,6 +49,7 @@ namespace ModularCMS.Core.Services
             {
                 _currentSession.ExpiryTime = DateTime.Now.AddHours(SESSION_DURATION_HOURS);
                 SaveSession();
+                Debug.WriteLine("Session extended.");
             }
         }
 
@@ -53,25 +57,38 @@ namespace ModularCMS.Core.Services
         {
             _currentSession = null;
             DeleteStoredSession();
+            Debug.WriteLine("Session cleared.");
         }
 
         private void LoadSession()
         {
             try
             {
-                var sessionData = _preferences.Get(SESSION_KEY, "");
+                var sessionData = _preferencesService.Get(SESSION_KEY, "");
                 if (!string.IsNullOrEmpty(sessionData))
                 {
+                    Debug.WriteLine("Found session data. Attempting to deserialize...");
                     _currentSession = UserSession.FromJson(sessionData);
 
+                    // Check if the session is expired
                     if (_currentSession?.IsExpired == true)
                     {
+                        Debug.WriteLine("Session expired. Clearing session.");
                         ClearSession();
                     }
+                    else if (_currentSession != null)
+                    {
+                        Debug.WriteLine($"Session loaded successfully for user: {_currentSession.Username}");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("No session data found. Starting fresh.");
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"Error parsing session data: {ex.Message}");
                 ClearSession();
             }
         }
@@ -82,11 +99,12 @@ namespace ModularCMS.Core.Services
             {
                 if (_currentSession != null)
                 {
-                    _preferences.Set(SESSION_KEY, _currentSession.ToJson());
+                    _preferencesService.Set(SESSION_KEY, _currentSession.ToJson());
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"Error saving session: {ex.Message}");
             }
         }
 
@@ -94,10 +112,11 @@ namespace ModularCMS.Core.Services
         {
             try
             {
-                _preferences.Remove(SESSION_KEY);
+                _preferencesService.Remove(SESSION_KEY);
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"Error deleting session: {ex.Message}");
             }
         }
 

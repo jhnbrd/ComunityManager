@@ -1,0 +1,166 @@
+﻿@using ModularCMS.Core.Services
+@using community_management_system.Api.Models
+@using MudBlazor
+@using Microsoft.EntityFrameworkCore
+@using ModularCMS.Core.Data
+@using ModularCMS.Core.Data.Dto
+@inject AppDbContext DbContext
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Visibility" Class="mr-3" />
+            Viewing Employee Details
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_isLoading)
+        {
+            <div class="d-flex justify-center align-center py-8">
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="my-4">@_errorMessage</MudAlert>
+        }
+        else if (_userDetails == null)
+        {
+            <MudAlert Severity="Severity.Warning" Class="my-4">Employee details not found.</MudAlert>
+        }
+        else
+        {
+            <MudGrid Spacing="2">
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h5" Class="mb-4">User Details</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.subtitle1">
+                        <span class="font-weight-bold">Employee ID:</span> @_userDetails.Employee_ID
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.subtitle1">
+                        <span class="font-weight-bold">Username:</span> @_userDetails.Username
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle1">
+                        <span class="font-weight-bold">Full Name:</span> @_userDetails.Full_Name
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.subtitle1">
+                        <span class="font-weight-bold">Suffix:</span> @_userDetails.Suffix
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.subtitle1">
+                        <span class="font-weight-bold">Gender:</span> @_userDetails.Gender
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.subtitle1">
+                        <span class="font-weight-bold">Role:</span> @_userDetails.Role
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.subtitle1">
+                        <span class="font-weight-bold">Email:</span> @_userDetails.Email
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.subtitle1">
+                        <span class="font-weight-bold">Created At:</span> @_userDetails.Created_At.ToLocalTime().ToString("g")
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.subtitle1">
+                        <span class="font-weight-bold">Updated At:</span> @_userDetails.Updated_At?.ToLocalTime().ToString("g") ?? "N/A"
+                    </MudText>
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => MudDialog.Cancel()">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    // The parameter is now a simple integer for the Employee ID.
+    [Parameter] public int EmployeeId { get; set; }
+
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private UserDetailsDto _userDetails;
+    private bool _isLoading = true;
+    private string _errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserDetailsAsync();
+    }
+
+    private async Task LoadUserDetailsAsync()
+    {
+        _isLoading = true;
+        _errorMessage = string.Empty;
+
+        try
+        {
+            _userDetails = await DbContext.Employees
+                .Where(e => e.Employee_ID == EmployeeId)
+                .Join(DbContext.Users,
+                    employee => employee.User_ID,
+                    user => user.User_ID,
+                    (employee, user) => new UserDetailsDto
+                    {
+                        Employee_ID = employee.Employee_ID,
+                        First_Name = employee.First_Name,
+                        Middle_Name = employee.Middle_Name,
+                        Last_Name = employee.Last_Name,
+                        Suffix = employee.Suffix,
+                        Gender = employee.Gender,
+                        Role = employee.Role,
+                        Username = user.Username,
+                        Email = user.Email,
+                        Created_At = user.Created_At,
+                        Updated_At = user.Updated_At
+                    })
+                .FirstOrDefaultAsync();
+
+            if (_userDetails == null)
+            {
+                _errorMessage = "Employee not found.";
+                Snackbar.Add("Employee details not found.", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"An error occurred: {ex.Message}";
+            Snackbar.Add(_errorMessage, Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    public class UserDetailsDto
+    {
+        public int Employee_ID { get; set; }
+        public string First_Name { get; set; }
+        public string Middle_Name { get; set; }
+        public string Last_Name { get; set; }
+        public string Suffix { get; set; }
+        public string Full_Name => $"{First_Name} {Middle_Name} {Last_Name} {Suffix}".Trim();
+        public string Gender { get; set; }
+        public string Role { get; set; }
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public DateTime Created_At { get; set; }
+        public DateTime? Updated_At { get; set; }
+    }
+}

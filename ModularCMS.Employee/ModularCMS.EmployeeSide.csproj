@@ -6,6 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Remove="wwwroot\logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\logo.png" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <SupportedPlatform Include="browser" />
@@ -13,9 +21,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.19" />
+    <PackageReference Include="MudBlazor" Version="8.12.0" />
   </ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\ModularCMS.Core\ModularCMS.Core.csproj" />
 		<ProjectReference Include="..\ModularCMS.SharedUI\ModularCMS.SharedUI.csproj" />
 	</ItemGroup>
 

@@ -21,7 +21,7 @@ namespace ModularCMS.Core.Services
             Preferences.Set(key, value);
         }
 
-        public string Get(string key, string defaultValue = "")
+        public string Get(string key, string defaultValue)
         {
             return Preferences.Get(key, defaultValue);
         }

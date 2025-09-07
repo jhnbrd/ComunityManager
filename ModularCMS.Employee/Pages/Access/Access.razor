@@ -1,0 +1,232 @@
+﻿@page "/employee/access"
+@inject AppDbContext DbContext
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject AuthService AuthService
+
+<div class="d-flex flex-column my-3 mx-5">
+    <!-- Header -->
+    <div class="d-flex flex-row justify-space-between align-items-center mb-3">
+        <MudText Typo="Typo.h5" Class="font-weight-bold ml-2 w-50">Employee Access Manager</MudText>
+        <div class="d-flex flex-row gap-2 align-items-center">
+            <MudTextField T="string"
+                          @bind-Value="_searchString"
+                          Label="Search"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Style="background: white; width: 250px; align-self: center;"
+                          Margin="Margin.Dense"
+                          @oninput="() => StateHasChanged()" />
+            <MudMenu CloseOnSelect="true" OffsetY="true">
+                <ActivatorContent>
+                    <MudButton Variant="Variant.Filled"
+                               Size="Size.Small"
+                               Style="border-radius: 9999px; background-color: #fff; color: #000;"
+                               EndIcon="@Icons.Material.Filled.FilterList"
+                               IconSize="Size.Small">
+                        Filter
+                    </MudButton>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem OnClick="() => { _selectedStatus = UserAccessStatus.All; StateHasChanged(); }">All</MudMenuItem>
+                    <MudMenuItem OnClick="() => { _selectedStatus = UserAccessStatus.Active; StateHasChanged(); }">Active</MudMenuItem>
+                    <MudMenuItem OnClick="() => { _selectedStatus = UserAccessStatus.Inactive; StateHasChanged(); }">Inactive</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+            <MudButton Variant="Variant.Filled"
+                       Size="Size.Small"
+                       Style="border-radius: 9999px; background-color: #3989CA; color: #fff;"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       IconSize="Size.Small"
+                       @onclick="HandleAddUser">
+                Add
+            </MudButton>
+        </div>
+    </div>
+    <!-- Table -->
+    <MudCard Class="flex-grow-1 overflow-auto mud-elevation-4" Style="border-radius: 12px; background-color: #fff;">
+        <MudCardContent Class="pa-0">
+            <MudTable T="EmployeeUser" Items="_allEmployeeUsers" Dense="true" Hover="true" Bordered="false" Striped="true" Filter="FilterFunction">
+                <HeaderContent>
+                    <MudTh SortBy="@(new Func<EmployeeUser, object>(e => e.Employee_ID))">Employee ID</MudTh>
+                    <MudTh SortBy="@(new Func<EmployeeUser, object>(e => e.Full_Name))">Name</MudTh>
+                    <MudTh SortBy="@(new Func<EmployeeUser, object>(e => e.Username))">Username</MudTh>
+                    <MudTh SortBy="@(new Func<EmployeeUser, object>(e => e.Role))">Role</MudTh>
+                    <MudTh SortBy="@(new Func<EmployeeUser, object>(e => e.Is_Active))">Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Employee ID">@context.Employee_ID</MudTd>
+                    <MudTd DataLabel="Name">@context.Full_Name</MudTd>
+                    <MudTd DataLabel="Username">@context.Username</MudTd>
+                    <MudTd DataLabel="Role">@context.Role</MudTd>
+                    <MudTd DataLabel="Status">
+                        @{
+                            var chipColor = context.Is_Active ? Color.Success : Color.Error;
+                            var chipText = context.Is_Active ? "Active" : "Inactive";
+                        }
+                        <MudChip T="string" Color="@chipColor" Size="Size.Small">@chipText</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudTooltip Text="View Details">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Info" OnClick="@(() => HandleViewUser(context.Employee_ID))" />
+                        </MudTooltip>
+                        <MudTooltip Text="Edit User">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => HandleEditUser(context.Employee_ID))" />
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 9 }" />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</div>
+
+<style>
+    .my-custom-class {
+        backdrop-filter: blur(10px);
+    }
+</style>
+
+@code {
+    private List<EmployeeUser> _allEmployeeUsers = new();
+    private string _searchString = "";
+    private UserAccessStatus _selectedStatus = UserAccessStatus.All;
+    private bool _isLoading = true;
+    private string _errorMessage = "";
+
+    private class EmployeeUser
+    {
+        public int Employee_ID { get; set; }
+        public string First_Name { get; set; }
+        public string Middle_Name { get; set; }
+        public string Last_Name { get; set; }
+        public string Suffix { get; set; }
+        public string Full_Name => $"{First_Name} {Middle_Name} {Last_Name} {Suffix}".Trim();
+        public string Username { get; set; }
+        public string Role { get; set; }
+        public bool Is_Active { get; set; }
+    }
+
+    private enum UserAccessStatus { All, Active, Inactive }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployeeUsersAsync();
+    }
+
+    private async Task LoadEmployeeUsersAsync()
+    {
+        _isLoading = true;
+        _errorMessage = "";
+        Snackbar.Add("Loading users...", Severity.Info);
+        try
+        {
+            _allEmployeeUsers = await DbContext.Employees
+                .Join(DbContext.Users,
+                      employee => employee.User_ID,
+                      user => user.User_ID,
+                      (employee, user) => new EmployeeUser
+                      {
+                          Employee_ID = employee.Employee_ID,
+                          First_Name = employee.First_Name,
+                          Middle_Name = employee.Middle_Name,
+                          Last_Name = employee.Last_Name,
+                          Suffix = employee.Suffix,
+                          Username = user.Username,
+                          Role = employee.Role,
+                          Is_Active = user.Is_Active
+                      })
+                .ToListAsync();
+            Snackbar.Add("Users loaded.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"An error occurred while loading data: {ex.Message}";
+            Snackbar.Add(_errorMessage, Severity.Error);
+            Console.WriteLine($"Database query exception: {ex}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private bool FilterFunction(EmployeeUser user)
+    {
+        if (!string.IsNullOrWhiteSpace(_searchString) &&
+            !user.Full_Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase) &&
+            !user.Username.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (_selectedStatus == UserAccessStatus.Active && !user.Is_Active)
+        {
+            return false;
+        }
+        else if (_selectedStatus == UserAccessStatus.Inactive && user.Is_Active)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task HandleAddUser()
+    {
+        var dialog = await DialogService.ShowAsync<AddUserDialog>("Add New Employee");
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var newUserDto = result.Data as AddUserDto;
+
+            if (newUserDto != null)
+            {
+                try
+                {
+                    bool success = await AuthService.AddEmployeeAsync(newUserDto);
+                    if (success)
+                    {
+                        Snackbar.Add($"Employee '{newUserDto.FirstName} {newUserDto.LastName}' added successfully!", Severity.Success);
+                        await LoadEmployeeUsersAsync();
+                    }
+                    else
+                    {
+                        Snackbar.Add("Failed to add employee. Please check the logs.", Severity.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Error adding employee: {ex.Message}", Severity.Error);
+                }
+            } else
+            {
+                Snackbar.Add("Invalid user data received from dialog.", Severity.Error);
+            }
+        }
+    }
+
+    private void HandleViewUser(int employeeID)
+    {
+        var parameters = new DialogParameters { ["EmployeeId"] = employeeID };
+        DialogService.Show<ViewUserDialog>("Employee Details", parameters);
+    }
+
+    private async Task HandleEditUser(int employeeId)
+    {
+        var parameters = new DialogParameters<EditUserDialog> { { x => x.EmployeeId, employeeId } };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = DialogService.Show<EditUserDialog>("Editing Employee", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadEmployeeUsersAsync();
+        }
+    }
+}

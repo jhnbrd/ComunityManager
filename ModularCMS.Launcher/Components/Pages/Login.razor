@@ -40,7 +40,6 @@
     private string password;
     private bool isLoading = false;
     private string connectionString;
-    private MudForm form;
 
     private class User
     {
@@ -74,7 +73,9 @@
 
             if (result.Success)
             {
-                Snackbar.Add($"Welcome back, {result.User.Username}! {result.User.User_Type}", Severity.Success);
+                SessionService.CreateSession(result.User, result.User.User_Type);
+
+                Snackbar.Add($"Welcome back, {result.User.Username}!", Severity.Success);
                 await Task.Delay(3000);
                 await MessengerService.SendAsync(new LoginSuccessMessage(result.User.User_Type));
             }
