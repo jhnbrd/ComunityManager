@@ -1,5 +1,96 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
+<div style="height: 100vh; background-image: url('Images/login_background.png'); background-size: cover; background-position: center;">
+    <MudPaper Class="mud-elevation-16 d-flex align-center" Style="width: 1350px; color: white; background: none !important;">
+        <MudImage Src="Images/login_header.png" Style="width: 1350px !important; height: 111px;"></MudImage>
+    </MudPaper>
 
-Welcome to your new app.
+    <div class="d-flex justify-content-center align-center" style="height: calc(100vh - 111px);">
+        <MudCard Class="mud-elevation-24 pa-8" Style="width: 400px; border-radius: 20px; background-color: #E8D09D;">
+            <MudText Typo="Typo.h5" Class="mb-4" Style="text-align: center; font-size: 28px; color: #000000; font-weight: bolder;">Welcome!</MudText>
+            <MudTextField T="string" Label="Username" Variant="Variant.Outlined" Margin="Margin.Dense" Style="background-color: #EDE3DA;" @bind-Value="username" />
+                <MudTextField T="string" Label="Password" InputType="InputType.Password" Variant="Variant.Outlined" Margin="Margin.Dense" Style="background-color: #EDE3DA;" @bind-Value="password" />
+                <MudLink Href="#" Typo="Typo.body2" Underline="Underline.Always" Class="my-2 mt-4" Style="font-size: 12px; text-align: center; color: blue !important;">Forgot Password?</MudLink>
+                <div class="d-flex justify-content-center">
+                    <MudButton Variant="Variant.Filled"
+                               Class="rounded-xl"
+                               Color="Color.Primary"
+                               FullWidth="false"
+                               Style="font-size: 18px; font-weight: bold; width: 207px; height: 54px; background-color: #3989CA; color: #000000;"
+                               @onclick="HandleLogin"
+                               Disabled="isLoading">
+                        @if (isLoading)
+                        {
+                            <MudProgressCircular Class="me-2" Indeterminate="true" Size="Size.Small" />
+                            <span>Logging in...</span>
+                        }
+                        else
+                        {
+                            <span>Login</span>
+                        }
+                    </MudButton>
+                </div>
+
+        </MudCard>
+    </div>
+</div>
+
+@code {
+    private string username;
+    private string password;
+    private bool isLoading = false;
+    private string connectionString;
+    private MudForm form;
+
+    private class User
+    {
+        public int User_ID { get; set; }
+        public string Username { get; set; }
+        public string Password_Hash { get; set; }
+        public string Password_Salt { get; set; }
+        public string User_Type { get; set; }
+        public bool Is_Active { get; set; }
+    }
+
+    protected override void OnInitialized()
+    {
+        connectionString = AppDbContext.ConnectionString;
+    }
+
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+        {
+            Snackbar.Add("Please enter both a username and password.", Severity.Warning);
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            var result = await AuthService.LoginAsync(username, password);
+
+            if (result.Success)
+            {
+                Snackbar.Add($"Welcome back, {result.User.Username}! {result.User.User_Type}", Severity.Success);
+                await Task.Delay(3000);
+                await MessengerService.SendAsync(new LoginSuccessMessage(result.User.User_Type));
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Login failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

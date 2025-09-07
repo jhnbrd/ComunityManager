@@ -1,4 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using ModularCMS.Core.Data;
+using ModularCMS.Core.Helpers;
+using ModularCMS.Core.Services;
+using MudBlazor;
+using MudBlazor.Services;
+using System.ComponentModel.Design;
 
 namespace ModularCMS.Launcher
 {
@@ -14,14 +21,39 @@ namespace ModularCMS.Launcher
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
+            builder.Services.AddMudServices(config =>
+            {
+                config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
+                config.SnackbarConfiguration.PreventDuplicates = false;
+                config.SnackbarConfiguration.NewestOnTop = false;
+                config.SnackbarConfiguration.ShowCloseIcon = true;
+                config.SnackbarConfiguration.VisibleStateDuration = 10000;
+                config.SnackbarConfiguration.HideTransitionDuration = 500;
+                config.SnackbarConfiguration.ShowTransitionDuration = 500;
+                config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+            });
+            builder.Services.AddBlazorWebViewDeveloperTools();
             builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
+            builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(AppDbContext.ConnectionString));
 
-            return builder.Build();
+            builder.Services.AddSingleton<IMessengerService, MessengerService>();
+            builder.Services.AddSingleton<IPreferencesService, PreferencesService>();
+            builder.Services.AddSingleton<SessionService>();
+            builder.Services.AddScoped<AuthService>();
+
+            builder.Services.AddTransient<MainPage>();
+
+            var app = builder.Build();
+
+            ServiceHelper.Initialize(app.Services);
+
+            return app;
         }
     }
 }

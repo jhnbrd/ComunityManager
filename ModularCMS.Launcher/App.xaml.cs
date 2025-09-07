@@ -1,15 +1,24 @@
-﻿namespace ModularCMS.Launcher
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace ModularCMS.Launcher
 {
     public partial class App : Application
     {
-        public App()
+        public App(IServiceProvider serviceProvider)
         {
             InitializeComponent();
+            MainPage = serviceProvider.GetService<MainPage>();
         }
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            return new Window(new MainPage()) { Title = "ModularCMS.Launcher" };
+            var window = base.CreateWindow(activationState);
+
+            window.Title = "Barangay ERP - Login";
+            window.Width = 1366;
+            window.Height = 768;
+
+            return window;
         }
     }
 }

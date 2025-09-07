@@ -5,5 +5,19 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.JSInterop
+@using ModularCMS.SharedUI.Shared.Layout
 @using ModularCMS.Launcher
 @using ModularCMS.Launcher.Components
+@using ModularCMS.Core.Services;
+@using MudBlazor
+@using ModularCMS.Core.Data
+@using Microsoft.Data.SqlClient
+@using ModularCMS.Core.Helpers
+@using System.Data
+
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject IMessengerService MessengerService
