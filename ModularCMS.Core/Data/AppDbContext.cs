@@ -35,7 +35,8 @@ namespace ModularCMS.Core.Data
         {
         }
 
-        public static string ConnectionString = "Data Source=127.0.0.1,9210;Initial Catalog=cms_it13;Persist Security Info=True;User ID=jihan438;Password=JihanPH438;Trust Server Certificate=True";
+        //public static string ConnectionString = "Data Source=127.0.0.1,9210;Initial Catalog=cms_it13;Persist Security Info=True;User ID=jihan438;Password=JihanPH438;Trust Server Certificate=True";
+        public static string ConnectionString = "Data Source=MSI-JIHAN\\SQLEXPRESS;Initial Catalog=cms_it13;Integrated Security=True;Trust Server Certificate=True";
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

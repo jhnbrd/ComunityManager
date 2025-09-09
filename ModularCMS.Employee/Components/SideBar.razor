@@ -3,6 +3,8 @@
 @inject ISnackbar Snackbar
 @inject SessionService SessionService
 @inject NavigationManager Navigation
+@inject AuthService _AuthService
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <div class="employee-sidebar">
     <div class="sidebar-header">
@@ -26,45 +28,57 @@
 
     <nav class="sidebar-nav">
         <MudNavMenu>
-            <MudNavLink Href="/employee/residents"
-                        Icon="@Icons.Material.Filled.PeopleAlt"
-                        Match="NavLinkMatch.Prefix">
-                Residents Records
-            </MudNavLink>
+            @if (!string.IsNullOrEmpty(_userRole))
+            {
+                <MudNavLink Href="/employee/residents"
+                            Icon="@Icons.Material.Filled.PeopleAlt"
+                            Match="NavLinkMatch.Prefix">
+                    Residents
+                </MudNavLink>
 
-            <MudNavLink Href="/employee/approvals"
-                        Icon="@Icons.Material.Filled.CheckCircle"
-                        Match="NavLinkMatch.Prefix">
-                Approval Center
-            </MudNavLink>
+                @if (_userRole != "Treasurer" && _userRole != "Encoder")
+                {
+                    <MudNavLink Href="/employee/approvals"
+                                Icon="@Icons.Material.Filled.CheckCircle"
+                                Match="NavLinkMatch.Prefix">
+                        Services
+                    </MudNavLink>
+                }
 
-            <MudNavLink Href="/employee/service"
-                        Icon="@Icons.Material.Filled.Description"
-                        Match="NavLinkMatch.Prefix">
-                Service Records
-            </MudNavLink>
+                <MudNavLink Href="/employee/service"
+                            Icon="@Icons.Material.Filled.Description"
+                            Match="NavLinkMatch.Prefix">
+                        Projects
+                </MudNavLink>
 
-            <MudNavLink Href="/employee/finance"
-                        Icon="@Icons.Material.Filled.AccountBalance"
-                        Match="NavLinkMatch.Prefix">
-                Finance Manager
-            </MudNavLink>
+                @if (_userRole == "Treasurer" || _userRole == "SuperAdmin" || _userRole == "Kapitan" || _userRole == "Kagawad")
+                {
+                    <MudNavLink Href="/employee/finance"
+                                Icon="@Icons.Material.Filled.AccountBalance"
+                                Match="NavLinkMatch.Prefix">
+                        Finance
+                    </MudNavLink>
+                }
 
-            <MudNavLink Href="/employee/announcement"
-                        Icon="@Icons.Material.Filled.Announcement"
-                        Match="NavLinkMatch.Prefix">
-                Announcement
-            </MudNavLink>
+                <MudNavLink Href="/employee/announcement"
+                            Icon="@Icons.Material.Filled.Announcement"
+                            Match="NavLinkMatch.Prefix">
+                    Announcement
+                </MudNavLink>
 
-            <MudNavLink Href="/employee/access"
-                        Icon="@Icons.Material.Filled.LockOpen"
-                        Match="NavLinkMatch.Prefix">
-                Access Manager
-            </MudNavLink>
+                @if (_userRole == "SuperAdmin")
+                {
+                    <MudNavLink Href="/employee/access"
+                                Icon="@Icons.Material.Filled.LockOpen"
+                                Match="NavLinkMatch.Prefix">
+                        Access
+                    </MudNavLink>
+                }
 
+            }
             <MudNavLink @onclick="HandleLogoutConfirmation"
-                        Icon="@Icons.Material.Filled.Logout"
-                        Match="NavLinkMatch.Prefix">
+                Icon="@Icons.Material.Filled.Logout"
+                Match="NavLinkMatch.Prefix">
                 Logout
             </MudNavLink>
         </MudNavMenu>
@@ -205,6 +219,42 @@
 </style>
 
 @code {
+    private string _userRole = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployeeInfoAsync();
+    }
+
+    private async Task LoadEmployeeInfoAsync()
+    {
+        try
+        {
+            var session = _AuthService.GetCurrentSession();
+            if (session != null)
+            {
+                await using var dbContext = await DbContextFactory.CreateDbContextAsync();
+
+                var employee = await dbContext.Employees
+                    .FirstOrDefaultAsync(e => e.User_ID == session.User_ID);
+
+                if (employee != null)
+                {
+                    _userRole = employee.Role;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employee info: {ex.Message}");
+            Snackbar.Add("Failed to load user information.", Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
     private async Task HandleLogoutConfirmation()
     {
         bool? result = await DialogService.ShowMessageBox(

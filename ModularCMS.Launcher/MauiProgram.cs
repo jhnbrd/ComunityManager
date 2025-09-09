@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls;
 using ModularCMS.Core.Data;
 using ModularCMS.Core.Helpers;
 using ModularCMS.Core.Services;
@@ -40,16 +41,20 @@ namespace ModularCMS.Launcher
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
+            //builder.Services.AddDbContext<AppDbContext>(options =>
+            //options.UseSqlServer("Data Source=127.0.0.1,9210;Initial Catalog=cms_it13;Persist Security Info=True;User ID=jihan438;Password=JihanPH438;Trust Server Certificate=True"));
             builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer("Data Source=127.0.0.1,9210;Initial Catalog=cms_it13;Persist Security Info=True;User ID=jihan438;Password=JihanPH438;Trust Server Certificate=True"));
+            options.UseSqlServer("Data Source=MSI-JIHAN\\SQLEXPRESS;Initial Catalog=cms_it13;Integrated Security=True;Trust Server Certificate=True"));
 
             builder.Services.AddSingleton<IMessengerService, MessengerService>();
             builder.Services.AddSingleton<IPreferencesService, PreferencesService>();
             builder.Services.AddSingleton<SessionService>();
             builder.Services.AddScoped<AuthService>();
+    //        builder.Services.AddDbContextFactory<AppDbContext>(options =>
+    //options.UseSqlServer("Data Source=127.0.0.1,9210;Initial Catalog=cms_it13;Persist Security Info=True;User ID=jihan438;Password=JihanPH438;Trust Server Certificate=True"));
             builder.Services.AddDbContextFactory<AppDbContext>(options =>
-    options.UseSqlServer("Data Source=127.0.0.1,9210;Initial Catalog=cms_it13;Persist Security Info=True;User ID=jihan438;Password=JihanPH438;Trust Server Certificate=True"));
-
+    options.UseSqlServer("Data Source=MSI-JIHAN\\SQLEXPRESS;Initial Catalog=cms_it13;Integrated Security=True;Trust Server Certificate=True"));
+            
             builder.Services.AddTransient<MainPage>();
 
             var app = builder.Build();
